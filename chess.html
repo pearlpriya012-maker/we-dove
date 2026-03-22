@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chess — WE🕊️</title>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Rajdhani',sans-serif;background:#03000f;color:#fff;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding:20px;overflow-x:hidden
+}
+
+/* Neon Arena Background */
+.na-bg{position:fixed;inset:0;pointer-events:none;z-index:0}
+.na-floor{
+  position:absolute;bottom:0;left:-20%;right:-20%;height:55%;
+  background-image:linear-gradient(rgba(0,200,255,.09) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,200,255,.09) 1px,transparent 1px);
+  background-size:55px 55px;transform:perspective(500px) rotateX(65deg);
+  transform-origin:bottom;opacity:.55
+}
+.na-beam{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);width:3px;height:42%;
+  background:linear-gradient(180deg,rgba(0,200,255,.6),transparent);filter:blur(2px)
+}
+.na-glow1{
+  position:absolute;width:500px;height:180px;border-radius:50%;
+  background:rgba(0,200,255,.06);filter:blur(80px);top:15%;left:-80px
+}
+.na-glow2{
+  position:absolute;width:380px;height:160px;border-radius:50%;
+  background:rgba(160,0,255,.06);bottom:8%;right:-50px;filter:blur(80px)
+}
+
+/* Header */
+.header{
+  position:relative;z-index:10;width:100%;max-width:600px;
+  text-align:center;margin-bottom:30px
+}
+.title{
+  font-family:'Russo One',sans-serif;font-size:2.5em;color:#00c8ff;
+  letter-spacing:3px;margin-bottom:8px;
+  text-shadow:0 0 20px rgba(0,200,255,.6)
+}
+.back-btn{
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  padding:8px 16px;background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);
+  color:#00c8ff;font-family:'Russo One',sans-serif;font-size:.85em;
+  cursor:pointer;border-radius:3px;transition:all .2s;text-decoration:none
+}
+.back-btn:hover{background:rgba(0,200,255,.22);transform:translateY(-50%) translateY(-2px)}
+
+/* Game Container */
+.game-container{
+  position:relative;z-index:10;width:100%;max-width:600px;
+  background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.15);
+  border-radius:2px;padding:30px;backdrop-filter:blur(12px)
+}
+.game-container::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,200,255,.5),transparent)
+}
+
+/* Mode Selection Modal */
+.modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:1000;
+  display:flex;align-items:center;justify-content:center;padding:20px
+}
+.modal.hidden{display:none}
+.modal-content{
+  background:rgba(3,0,15,.98);border:1px solid rgba(0,200,255,.3);
+  border-radius:8px;padding:40px 30px;max-width:500px;width:100%;
+  box-shadow:0 20px 60px rgba(0,200,255,.2)
+}
+.modal-title{
+  font-family:'Russo One',sans-serif;font-size:1.8em;color:#00c8ff;
+  text-align:center;margin-bottom:30px;letter-spacing:2px
+}
+.mode-options{display:flex;flex-direction:column;gap:15px}
+.mode-btn{
+  padding:18px 24px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.25);
+  color:#00c8ff;font-family:'Rajdhani',sans-serif;font-size:1.1em;font-weight:600;
+  cursor:pointer;border-radius:6px;transition:all .3s;text-align:left;
+  display:flex;align-items:center;gap:12px
+}
+.mode-btn:hover{background:rgba(0,200,255,.18);transform:translateY(-2px);
+  box-shadow:0 4px 16px rgba(0,200,255,.3)}
+.mode-icon{font-size:1.5em}
+.mode-text{flex:1}
+.mode-desc{font-size:.8em;color:rgba(0,200,255,.6);font-weight:400;margin-top:4px}
+
+/* Invitation Screens */
+.invite-screen{display:none}
+.invite-screen.active{display:block}
+.input-group{margin-bottom:20px}
+.input-label{
+  font-family:'Share Tech Mono',monospace;font-size:.75em;color:rgba(0,200,255,.7);
+  letter-spacing:1px;margin-bottom:8px;display:block;text-transform:uppercase
+}
+.input-field{
+  width:100%;padding:12px 16px;background:rgba(0,200,255,.05);
+  border:1px solid rgba(0,200,255,.25);color:#00c8ff;
+  font-family:'Rajdhani',sans-serif;font-size:1em;border-radius:4px;outline:none
+}
+.input-field:focus{border-color:rgba(0,200,255,.5);background:rgba(0,200,255,.08)}
+.btn{
+  width:100%;padding:14px;background:linear-gradient(135deg,rgba(0,200,255,.15),rgba(0,255,157,.15));
+  border:1px solid rgba(0,200,255,.4);color:#00c8ff;
+  font-family:'Russo One',sans-serif;font-size:1em;letter-spacing:1px;
+  cursor:pointer;border-radius:4px;transition:all .3s;margin-top:10px
+}
+.btn:hover{background:linear-gradient(135deg,rgba(0,200,255,.25),rgba(0,255,157,.25));
+  transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,200,255,.3)}
+.btn-secondary{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.7)
+}
+.btn-secondary:hover{background:rgba(255,255,255,.08)}
+.room-code-display{
+  font-family:'Share Tech Mono',monospace;font-size:2em;color:#00ff9d;
+  text-align:center;letter-spacing:8px;padding:20px;
+  background:rgba(0,255,157,.08);border:2px solid rgba(0,255,157,.3);
+  border-radius:6px;margin:20px 0
+}
+.copy-hint{
+  text-align:center;font-size:.85em;color:rgba(0,200,255,.6);margin-top:10px
+}
+
+/* Friends List */
+.friends-list{max-height:300px;overflow-y:auto;margin-bottom:20px}
+.friend-item{
+  padding:12px 16px;background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.15);
+  border-radius:4px;margin-bottom:8px;display:flex;justify-content:space-between;
+  align-items:center;cursor:pointer;transition:all .2s
+}
+.friend-item:hover{background:rgba(0,200,255,.12)}
+.friend-name{font-size:1.05em;font-weight:600}
+.friend-status{font-size:.8em;color:rgba(0,255,157,.8)}
+.friend-status.offline{color:rgba(255,255,255,.3)}
+.invite-btn{
+  padding:6px 14px;background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.3);
+  color:#00c8ff;font-size:.85em;border-radius:4px;cursor:pointer;transition:all .2s
+}
+.invite-btn:hover{background:rgba(0,200,255,.25)}
+
+/* Waiting Room */
+.waiting-room{text-align:center;padding:40px 20px}
+.waiting-icon{font-size:4em;margin-bottom:20px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.waiting-text{font-size:1.2em;color:rgba(0,200,255,.8);margin-bottom:10px}
+.waiting-subtext{font-size:.9em;color:rgba(0,200,255,.5)}
+.player-list{margin:30px 0}
+.player-item{
+  padding:12px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.2);
+  border-radius:4px;margin-bottom:8px
+}
+.player-name{font-weight:600;color:#00ff9d}
+.player-role{font-size:.85em;color:rgba(0,200,255,.6);margin-top:4px}
+
+/* Chess Board */
+.chess-container{display:none}
+.chess-container.active{display:block}
+.game-info{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:20px;padding:15px;background:rgba(0,200,255,.05);
+  border:1px solid rgba(0,200,255,.15);border-radius:4px
+}
+.player-info{flex:1}
+.player-label{font-size:.8em;color:rgba(0,200,255,.6);margin-bottom:4px}
+.player-name-display{font-size:1.1em;font-weight:600;color:#00c8ff}
+.turn-indicator{
+  padding:8px 20px;background:rgba(0,255,157,.15);border:1px solid rgba(0,255,157,.3);
+  border-radius:20px;font-family:'Russo One',sans-serif;font-size:.9em;
+  color:#00ff9d;letter-spacing:1px
+}
+.chess-board{
+  display:grid;grid-template-columns:repeat(8,1fr);
+  max-width:100%;margin:0 auto;border:2px solid rgba(0,200,255,.25);
+  background:rgba(0,0,0,.5);border-radius:2px;gap:1px;aspect-ratio:1
+}
+.chess-cell{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  font-size:clamp(1.2em,4vw,2.5em);cursor:pointer;transition:all .18s;position:relative
+}
+.chess-cell.light{background:rgba(255,255,255,.07)}
+.chess-cell.dark{background:rgba(0,200,255,.07)}
+.chess-cell.selected{background:rgba(0,255,200,.2)!important;
+  box-shadow:inset 0 0 16px rgba(0,255,200,.4)}
+.chess-cell.valid-move::after{
+  content:'';position:absolute;width:28%;height:28%;border-radius:50%;
+  background:rgba(0,255,100,.5)
+}
+.chess-cell.capture-move{background:rgba(255,60,60,.2)!important}
+.chess-status{
+  text-align:center;margin:20px 0;font-family:'Share Tech Mono',monospace;
+  font-size:.9em;color:rgba(0,200,255,.8)
+}
+
+/* Game Over */
+.game-over{display:none;text-align:center;padding:40px 20px}
+.game-over.active{display:block}
+.game-over-title{
+  font-family:'Russo One',sans-serif;font-size:2.5em;color:#00ff9d;
+  margin-bottom:20px;text-shadow:0 0 20px rgba(0,255,157,.6)
+}
+.game-over-winner{font-size:1.3em;color:rgba(0,200,255,.9);margin-bottom:30px}
+.game-over-actions{display:flex;gap:15px;justify-content:center;flex-wrap:wrap}
+
+/* Utility */
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="na-bg">
+  <div class="na-floor"></div>
+  <div class="na-beam"></div>
+  <div class="na-glow1"></div>
+  <div class="na-glow2"></div>
+</div>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← BACK</a>
+  <div class="title">♟️ CHESS</div>
+</div>
+
+<!-- Mode Selection Modal -->
+<div class="modal" id="modeModal">
+  <div class="modal-content">
+    <div class="modal-title">SELECT GAME MODE</div>
+    <div class="mode-options">
+      <button class="mode-btn" onclick="selectMode('ai')">
+        <span class="mode-icon">🤖</span>
+        <div class="mode-text">
+          <div>Play vs AI</div>
+          <div class="mode-desc">Challenge the computer</div>
+        </div>
+      </button>
+      <button class="mode-btn" onclick="selectMode('invite')">
+        <span class="mode-icon">👤</span>
+        <div class="mode-text">
+          <div>Invite Friend</div>
+          <div class="mode-desc">Send direct invitation to online friend</div>
+        </div>
+      </button>
+      <button class="mode-btn" onclick="selectMode('room')">
+        <span class="mode-icon">🔗</span>
+        <div class="mode-text">
+          <div>Create Room</div>
+          <div class="mode-desc">Get code or shareable link</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="game-container">
+  
+  <!-- Invite Friend Screen -->
+  <div class="invite-screen" id="inviteScreen">
+    <div class="modal-title">INVITE FRIEND</div>
+    <div class="input-group">
+      <label class="input-label">Search Friend</label>
+      <input type="text" class="input-field" id="friendSearch" placeholder="Enter username...">
+    </div>
+    <div class="friends-list" id="friendsList"></div>
+    <button class="btn btn-secondary" onclick="backToModeSelect()">BACK</button>
+  </div>
+
+  <!-- Create Room Screen -->
+  <div class="invite-screen" id="roomScreen">
+    <div class="modal-title">CREATE ROOM</div>
+    <div class="room-code-display" id="roomCode">------</div>
+    <div class="copy-hint">Share this code with your friend</div>
+    <button class="btn" onclick="copyRoomCode()">📋 COPY CODE</button>
+    <button class="btn" onclick="shareRoomLink()">🔗 SHARE LINK</button>
+    <div class="waiting-room" style="margin-top:30px">
+      <div class="waiting-icon">⏳</div>
+      <div class="waiting-text">Waiting for opponent...</div>
+      <div class="player-list" id="roomPlayerList"></div>
+    </div>
+    <button class="btn btn-secondary" onclick="cancelRoom()">CANCEL</button>
+  </div>
+
+  <!-- Join Room Screen (URL parameter) -->
+  <div class="invite-screen" id="joinScreen">
+    <div class="modal-title">JOIN ROOM</div>
+    <div class="input-group">
+      <label class="input-label">Room Code</label>
+      <input type="text" class="input-field" id="joinCode" placeholder="Enter 6-character code...">
+    </div>
+    <button class="btn" onclick="joinRoom()">JOIN GAME</button>
+    <button class="btn btn-secondary" onclick="backToModeSelect()">BACK</button>
+  </div>
+
+  <!-- Chess Game -->
+  <div class="chess-container" id="chessGame">
+    <div class="game-info">
+      <div class="player-info">
+        <div class="player-label">WHITE</div>
+        <div class="player-name-display" id="whitePlayer">You</div>
+      </div>
+      <div class="turn-indicator" id="turnIndicator">WHITE'S TURN</div>
+      <div class="player-info" style="text-align:right">
+        <div class="player-label">BLACK</div>
+        <div class="player-name-display" id="blackPlayer">AI</div>
+      </div>
+    </div>
+    
+    <div class="chess-board" id="board"></div>
+    <div class="chess-status" id="status"></div>
+    
+    <div style="margin-top:20px;text-align:center">
+      <button class="btn btn-secondary" onclick="resignGame()">RESIGN</button>
+    </div>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div class="game-over" id="gameOver">
+    <div class="game-over-title">GAME OVER</div>
+    <div class="game-over-winner" id="gameOverWinner"></div>
+    <div class="game-over-actions">
+      <button class="btn" onclick="playAgain()">PLAY AGAIN</button>
+      <button class="btn btn-secondary" onclick="window.location.href='index.html'">BACK TO MENU</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CHESS MULTIPLAYER GAME
+// ═══════════════════════════════════════════════════════════
+
+const GAME = {
+  mode: null, // 'ai' or 'multiplayer'
+  board: [],
+  selectedCell: null,
+  currentTurn: 'white',
+  gameOver: false,
+  
+  // Multiplayer
+  roomId: null,
+  playerId: null,
+  playerColor: null,
+  opponentId: null,
+  isHost: false,
+  db: null,
+  roomRef: null,
+  
+  // Firebase config (from localStorage settings)
+  firebaseConfig: null
+};
+
+// Initialize
+window.onload = function() {
+  // Check for room code in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const roomId = urlParams.get('roomId');
+  
+  if (roomId) {
+    // Auto-join mode
+    document.getElementById('modeModal').classList.add('hidden');
+    document.getElementById('joinScreen').classList.add('active');
+    document.getElementById('joinCode').value = roomId;
+  }
+  
+  loadFirebaseConfig();
+  loadUserData();
+};
+
+function loadFirebaseConfig() {
+  const settings = JSON.parse(localStorage.getItem('we_settings') || '{}');
+  if (settings.firebaseApiKey && settings.firebaseDatabaseUrl) {
+    GAME.firebaseConfig = {
+      apiKey: settings.firebaseApiKey,
+      databaseURL: settings.firebaseDatabaseUrl,
+      projectId: settings.firebaseProjectId || 'we-dove'
+    };
+    initializeFirebase();
+  }
+}
+
+function initializeFirebase() {
+  if (!GAME.firebaseConfig) return;
+  if (!firebase.apps.length) {
+    firebase.initializeApp(GAME.firebaseConfig);
+  }
+  GAME.db = firebase.database();
+}
+
+function loadUserData() {
+  const user = JSON.parse(sessionStorage.getItem('we_user') || 'null');
+  if (user) {
+    GAME.playerId = user.username;
+  } else {
+    GAME.playerId = 'Player' + Math.floor(Math.random() * 10000);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MODE SELECTION
+// ═══════════════════════════════════════════════════════════
+
+function selectMode(mode) {
+  GAME.mode = mode;
+  document.getElementById('modeModal').classList.add('hidden');
+  
+  if (mode === 'ai') {
+    startAIGame();
+  } else if (mode === 'invite') {
+    showInviteScreen();
+  } else if (mode === 'room') {
+    createRoom();
+  }
+}
+
+function backToModeSelect() {
+  document.querySelectorAll('.invite-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('modeModal').classList.remove('hidden');
+  GAME.mode = null;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AI MODE
+// ═══════════════════════════════════════════════════════════
+
+function startAIGame() {
+  GAME.mode = 'ai';
+  GAME.playerColor = 'white';
+  document.getElementById('whitePlayer').textContent = 'You';
+  document.getElementById('blackPlayer').textContent = 'AI';
+  document.getElementById('chessGame').classList.add('active');
+  initBoard();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INVITE FRIEND MODE
+// ═══════════════════════════════════════════════════════════
+
+function showInviteScreen() {
+  document.getElementById('inviteScreen').classList.add('active');
+  loadFriendsList();
+}
+
+function loadFriendsList() {
+  if (!GAME.db) {
+    document.getElementById('friendsList').innerHTML = '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">Firebase not configured</div>';
+    return;
+  }
+  
+  const friendsRef = GAME.db.ref(`friends/${GAME.playerId}`);
+  friendsRef.on('value', snap => {
+    const friends = snap.val() || {};
+    const friendsListEl = document.getElementById('friendsList');
+    
+    const friendItems = Object.keys(friends).map(friendId => {
+      const friend = friends[friendId];
+      if (friend.status !== 'accepted') return '';
+      
+      // Check online status
+      return `
+        <div class="friend-item">
+          <div>
+            <div class="friend-name">${friendId}</div>
+            <div class="friend-status online">● Online</div>
+          </div>
+          <button class="invite-btn" onclick="sendGameInvite('${friendId}')">INVITE</button>
+        </div>
+      `;
+    }).filter(Boolean).join('');
+    
+    friendsListEl.innerHTML = friendItems || '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No friends online</div>';
+  });
+}
+
+function sendGameInvite(friendId) {
+  if (!GAME.db) return;
+  
+  const inviteId = Date.now().toString();
+  const inviteRef = GAME.db.ref(`gameInvites/${GAME.playerId}/${friendId}/${inviteId}`);
+  
+  inviteRef.set({
+    gameType: 'chess',
+    from: GAME.playerId,
+    to: friendId,
+    timestamp: firebase.database.ServerValue.TIMESTAMP,
+    status: 'pending'
+  }).then(() => {
+    alert(`Invite sent to ${friendId}!`);
+    // Create room and wait
+    createRoomForInvite(friendId);
+  });
+}
+
+function createRoomForInvite(guestId) {
+  const code = generateRoomCode();
+  GAME.roomId = code;
+  GAME.isHost = true;
+  GAME.playerColor = 'white';
+  
+  const roomRef = GAME.db.ref(`gameRooms/${code}`);
+  GAME.roomRef = roomRef;
+  
+  roomRef.set({
+    code: code,
+    gameType: 'chess',
+    host: GAME.playerId,
+    guest: guestId,
+    status: 'waiting',
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    gameState: null
+  });
+  
+  // Show waiting screen
+  document.getElementById('inviteScreen').classList.remove('active');
+  document.getElementById('roomScreen').classList.add('active');
+  document.getElementById('roomCode').textContent = code;
+  
+  // Listen for guest join
+  roomRef.on('value', snap => {
+    const room = snap.val();
+    if (room && room.status === 'playing') {
+      startMultiplayerGame();
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CREATE ROOM MODE
+// ═══════════════════════════════════════════════════════════
+
+function createRoom() {
+  const code = generateRoomCode();
+  GAME.roomId = code;
+  GAME.isHost = true;
+  GAME.playerColor = 'white';
+  
+  const roomRef = GAME.db.ref(`gameRooms/${code}`);
+  GAME.roomRef = roomRef;
+  
+  roomRef.set({
+    code: code,
+    gameType: 'chess',
+    host: GAME.playerId,
+    guest: null,
+    status: 'waiting',
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    gameState: null
+  });
+  
+  document.getElementById('roomScreen').classList.add('active');
+  document.getElementById('roomCode').textContent = code;
+  
+  updateRoomPlayerList();
+  
+  // Listen for guest join
+  roomRef.on('value', snap => {
+    const room = snap.val();
+    if (room && room.guest && room.status === 'waiting') {
+      updateRoomPlayerList();
+      // Auto-start when guest joins
+      setTimeout(() => {
+        roomRef.update({ status: 'playing' });
+        startMultiplayerGame();
+      }, 1000);
+    }
+  });
+}
+
+function updateRoomPlayerList() {
+  GAME.roomRef.once('value').then(snap => {
+    const room = snap.val();
+    if (!room) return;
+    
+    const html = `
+      <div class="player-item">
+        <div class="player-name">${room.host}</div>
+        <div class="player-role">Host (White)</div>
+      </div>
+      ${room.guest ? `
+        <div class="player-item">
+          <div class="player-name">${room.guest}</div>
+          <div class="player-role">Guest (Black)</div>
+        </div>
+      ` : ''}
+    `;
+    
+    document.getElementById('roomPlayerList').innerHTML = html;
+  });
+}
+
+function joinRoom() {
+  const code = document.getElementById('joinCode').value.trim().toUpperCase();
+  if (!code || code.length !== 6) {
+    alert('Please enter a valid 6-character code');
+    return;
+  }
+  
+  GAME.roomId = code;
+  GAME.isHost = false;
+  GAME.playerColor = 'black';
+  
+  const roomRef = GAME.db.ref(`gameRooms/${code}`);
+  GAME.roomRef = roomRef;
+  
+  roomRef.once('value').then(snap => {
+    const room = snap.val();
+    if (!room) {
+      alert('Room not found');
+      return;
+    }
+    if (room.guest) {
+      alert('Room is full');
+      return;
+    }
+    
+    // Join room
+    roomRef.update({
+      guest: GAME.playerId,
+      status: 'playing'
+    });
+    
+    GAME.opponentId = room.host;
+    startMultiplayerGame();
+  });
+}
+
+function copyRoomCode() {
+  const code = document.getElementById('roomCode').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    alert('Code copied to clipboard!');
+  });
+}
+
+function shareRoomLink() {
+  const code = document.getElementById('roomCode').textContent;
+  const link = `${window.location.origin}${window.location.pathname}?roomId=${code}`;
+  navigator.clipboard.writeText(link).then(() => {
+    alert('Link copied to clipboard!');
+  });
+}
+
+function cancelRoom() {
+  if (GAME.roomRef) {
+    GAME.roomRef.remove();
+  }
+  backToModeSelect();
+}
+
+function generateRoomCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MULTIPLAYER GAME
+// ═══════════════════════════════════════════════════════════
+
+function startMultiplayerGame() {
+  document.querySelectorAll('.invite-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('chessGame').classList.add('active');
+  
+  // Set player names
+  GAME.roomRef.once('value').then(snap => {
+    const room = snap.val();
+    document.getElementById('whitePlayer').textContent = room.host;
+    document.getElementById('blackPlayer').textContent = room.guest;
+    GAME.opponentId = GAME.playerColor === 'white' ? room.guest : room.host;
+  });
+  
+  initBoard();
+  
+  // Listen for moves
+  GAME.roomRef.child('gameState').on('value', snap => {
+    const state = snap.val();
+    if (state && state.lastMove) {
+      // Apply opponent's move
+      if (state.lastMoveBy !== GAME.playerId) {
+        applyMove(state.lastMove);
+      }
+    }
+  });
+}
+
+function syncMove(move) {
+  if (GAME.mode !== 'ai' && GAME.roomRef) {
+    GAME.roomRef.child('gameState').set({
+      lastMove: move,
+      lastMoveBy: GAME.playerId,
+      currentTurn: GAME.currentTurn,
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CHESS GAME LOGIC
+// ═══════════════════════════════════════════════════════════
+
+function initBoard() {
+  const startPosition = [
+    ['♜','♞','♝','♛','♚','♝','♞','♜'],
+    ['♟','♟','♟','♟','♟','♟','♟','♟'],
+    ['','','','','','','',''],
+    ['','','','','','','',''],
+    ['','','','','','','',''],
+    ['','','','','','','',''],
+    ['♙','♙','♙','♙','♙','♙','♙','♙'],
+    ['♖','♘','♗','♕','♔','♗','♘','♖']
+  ];
+  
+  GAME.board = JSON.parse(JSON.stringify(startPosition));
+  GAME.currentTurn = 'white';
+  GAME.selectedCell = null;
+  GAME.gameOver = false;
+  
+  renderBoard();
+  updateStatus();
+}
+
+function renderBoard() {
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const cell = document.createElement('div');
+      cell.className = `chess-cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+      cell.textContent = GAME.board[row][col];
+      cell.onclick = () => handleCellClick(row, col);
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+function handleCellClick(row, col) {
+  if (GAME.gameOver) return;
+  
+  // Multiplayer turn check
+  if (GAME.mode !== 'ai') {
+    const isMyTurn = (GAME.currentTurn === 'white' && GAME.playerColor === 'white') ||
+                     (GAME.currentTurn === 'black' && GAME.playerColor === 'black');
+    if (!isMyTurn) return;
+  }
+  
+  const piece = GAME.board[row][col];
+  const pieceColor = getPieceColor(piece);
+  
+  if (GAME.selectedCell) {
+    // Try to move
+    if (isValidMove(GAME.selectedCell.row, GAME.selectedCell.col, row, col)) {
+      makeMove(GAME.selectedCell.row, GAME.selectedCell.col, row, col);
+      GAME.selectedCell = null;
+      clearHighlights();
+    } else if (pieceColor === GAME.currentTurn) {
+      // Select different piece
+      selectCell(row, col);
+    } else {
+      GAME.selectedCell = null;
+      clearHighlights();
+    }
+  } else {
+    if (pieceColor === GAME.currentTurn) {
+      selectCell(row, col);
+    }
+  }
+}
+
+function selectCell(row, col) {
+  GAME.selectedCell = {row, col};
+  clearHighlights();
+  
+  const cells = document.querySelectorAll('.chess-cell');
+  const index = row * 8 + col;
+  cells[index].classList.add('selected');
+  
+  // Highlight valid moves
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      if (isValidMove(row, col, r, c)) {
+        const idx = r * 8 + c;
+        if (GAME.board[r][c]) {
+          cells[idx].classList.add('capture-move');
+        } else {
+          cells[idx].classList.add('valid-move');
+        }
+      }
+    }
+  }
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.chess-cell').forEach(cell => {
+    cell.classList.remove('selected', 'valid-move', 'capture-move');
+  });
+}
+
+function makeMove(fromRow, fromCol, toRow, toCol) {
+  const piece = GAME.board[fromRow][fromCol];
+  const capturedPiece = GAME.board[toRow][toCol];
+  
+  GAME.board[toRow][toCol] = piece;
+  GAME.board[fromRow][fromCol] = '';
+  
+  // Check for pawn promotion
+  if ((piece === '♙' && toRow === 0) || (piece === '♟' && toRow === 7)) {
+    GAME.board[toRow][toCol] = piece === '♙' ? '♕' : '♛';
+  }
+  
+  // Check for game over (king captured)
+  if (capturedPiece === '♔' || capturedPiece === '♚') {
+    endGame(GAME.currentTurn);
+    return;
+  }
+  
+  // Switch turn
+  GAME.currentTurn = GAME.currentTurn === 'white' ? 'black' : 'white';
+  
+  renderBoard();
+  updateStatus();
+  
+  // Sync move in multiplayer
+  const move = {fromRow, fromCol, toRow, toCol};
+  syncMove(move);
+  
+  // AI move
+  if (GAME.mode === 'ai' && GAME.currentTurn === 'black') {
+    setTimeout(makeAIMove, 500);
+  }
+}
+
+function applyMove(move) {
+  const {fromRow, fromCol, toRow, toCol} = move;
+  GAME.board[toRow][toCol] = GAME.board[fromRow][fromCol];
+  GAME.board[fromRow][fromCol] = '';
+  GAME.currentTurn = GAME.currentTurn === 'white' ? 'black' : 'white';
+  renderBoard();
+  updateStatus();
+}
+
+function isValidMove(fromRow, fromCol, toRow, toCol) {
+  if (fromRow === toRow && fromCol === toCol) return false;
+  if (toRow < 0 || toRow > 7 || toCol < 0 || toCol > 7) return false;
+  
+  const piece = GAME.board[fromRow][fromCol];
+  const target = GAME.board[toRow][toCol];
+  const pieceColor = getPieceColor(piece);
+  const targetColor = getPieceColor(target);
+  
+  if (targetColor === pieceColor) return false;
+  
+  const rowDiff = toRow - fromRow;
+  const colDiff = toCol - fromCol;
+  
+  // Pawn
+  if (piece === '♙' || piece === '♟') {
+    const direction = piece === '♙' ? -1 : 1;
+    if (colDiff === 0 && !target) {
+      if (rowDiff === direction) return true;
+      if ((fromRow === 6 && piece === '♙') || (fromRow === 1 && piece === '♟')) {
+        if (rowDiff === direction * 2 && !GAME.board[fromRow + direction][fromCol]) return true;
+      }
+    }
+    if (Math.abs(colDiff) === 1 && rowDiff === direction && target) return true;
+    return false;
+  }
+  
+  // Rook
+  if (piece === '♖' || piece === '♜') {
+    if (rowDiff === 0 || colDiff === 0) {
+      return isPathClear(fromRow, fromCol, toRow, toCol);
+    }
+    return false;
+  }
+  
+  // Knight
+  if (piece === '♘' || piece === '♞') {
+    return (Math.abs(rowDiff) === 2 && Math.abs(colDiff) === 1) ||
+           (Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 2);
+  }
+  
+  // Bishop
+  if (piece === '♗' || piece === '♝') {
+    if (Math.abs(rowDiff) === Math.abs(colDiff)) {
+      return isPathClear(fromRow, fromCol, toRow, toCol);
+    }
+    return false;
+  }
+  
+  // Queen
+  if (piece === '♕' || piece === '♛') {
+    if (rowDiff === 0 || colDiff === 0 || Math.abs(rowDiff) === Math.abs(colDiff)) {
+      return isPathClear(fromRow, fromCol, toRow, toCol);
+    }
+    return false;
+  }
+  
+  // King
+  if (piece === '♔' || piece === '♚') {
+    return Math.abs(rowDiff) <= 1 && Math.abs(colDiff) <= 1;
+  }
+  
+  return false;
+}
+
+function isPathClear(fromRow, fromCol, toRow, toCol) {
+  const rowStep = toRow > fromRow ? 1 : toRow < fromRow ? -1 : 0;
+  const colStep = toCol > fromCol ? 1 : toCol < fromCol ? -1 : 0;
+  
+  let row = fromRow + rowStep;
+  let col = fromCol + colStep;
+  
+  while (row !== toRow || col !== toCol) {
+    if (GAME.board[row][col]) return false;
+    row += rowStep;
+    col += colStep;
+  }
+  
+  return true;
+}
+
+function getPieceColor(piece) {
+  if (!piece) return null;
+  const whitePieces = '♙♖♘♗♕♔';
+  const blackPieces = '♟♜♞♝♛♚';
+  if (whitePieces.includes(piece)) return 'white';
+  if (blackPieces.includes(piece)) return 'black';
+  return null;
+}
+
+function updateStatus() {
+  const turnText = GAME.currentTurn.toUpperCase() + "'S TURN";
+  document.getElementById('turnIndicator').textContent = turnText;
+  
+  if (GAME.mode !== 'ai') {
+    const isMyTurn = (GAME.currentTurn === 'white' && GAME.playerColor === 'white') ||
+                     (GAME.currentTurn === 'black' && GAME.playerColor === 'black');
+    document.getElementById('status').textContent = isMyTurn ? 'Your turn' : "Opponent's turn";
+  }
+}
+
+function makeAIMove() {
+  const moves = getAllValidMoves('black');
+  if (moves.length === 0) {
+    endGame('white');
+    return;
+  }
+  
+  const move = moves[Math.floor(Math.random() * moves.length)];
+  makeMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
+}
+
+function getAllValidMoves(color) {
+  const moves = [];
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = GAME.board[r][c];
+      if (getPieceColor(piece) === color) {
+        for (let tr = 0; tr < 8; tr++) {
+          for (let tc = 0; tc < 8; tc++) {
+            if (isValidMove(r, c, tr, tc)) {
+              moves.push({fromRow: r, fromCol: c, toRow: tr, toCol: tc});
+            }
+          }
+        }
+      }
+    }
+  }
+  return moves;
+}
+
+function endGame(winner) {
+  GAME.gameOver = true;
+  
+  // Sync game over
+  if (GAME.mode !== 'ai' && GAME.roomRef) {
+    GAME.roomRef.update({
+      status: 'finished',
+      winner: winner
+    });
+  }
+  
+  document.getElementById('chessGame').classList.remove('active');
+  document.getElementById('gameOver').classList.add('active');
+  document.getElementById('gameOverWinner').textContent = `${winner.toUpperCase()} WINS!`;
+  
+  // Update stats
+  updateStats(winner);
+}
+
+function resignGame() {
+  const opponent = GAME.currentTurn === 'white' ? 'black' : 'white';
+  endGame(opponent);
+}
+
+function playAgain() {
+  document.getElementById('gameOver').classList.remove('active');
+  if (GAME.roomRef) {
+    GAME.roomRef.remove();
+  }
+  GAME.roomRef = null;
+  GAME.roomId = null;
+  backToModeSelect();
+}
+
+function updateStats(winner) {
+  const user = JSON.parse(sessionStorage.getItem('we_user') || 'null');
+  if (!user || !GAME.db) return;
+  
+  const won = (winner === 'white' && GAME.playerColor === 'white') ||
+              (winner === 'black' && GAME.playerColor === 'black');
+  
+  GAME.db.ref(`users/${user.username}/totalGames`).transaction(count => (count || 0) + 1);
+}
+
+</script>
+</body>
+</html>

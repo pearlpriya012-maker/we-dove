@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake & Ladder — WE🕊️</title>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Rajdhani',sans-serif;background:#03000f;color:#fff;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;padding:20px;overflow-x:hidden}
+.na-bg{position:fixed;inset:0;pointer-events:none;z-index:0}
+.na-floor{position:absolute;bottom:0;left:-20%;right:-20%;height:55%;
+  background-image:linear-gradient(rgba(0,200,255,.09) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,200,255,.09) 1px,transparent 1px);
+  background-size:55px 55px;transform:perspective(500px) rotateX(65deg);transform-origin:bottom;opacity:.55}
+.na-beam{position:absolute;top:0;left:50%;transform:translateX(-50%);width:3px;height:42%;
+  background:linear-gradient(180deg,rgba(0,200,255,.6),transparent);filter:blur(2px)}
+.na-glow1{position:absolute;width:500px;height:180px;border-radius:50%;
+  background:rgba(0,200,255,.06);filter:blur(80px);top:15%;left:-80px}
+.na-glow2{position:absolute;width:380px;height:160px;border-radius:50%;
+  background:rgba(160,0,255,.06);bottom:8%;right:-50px;filter:blur(80px)}
+
+.header{position:relative;z-index:10;width:100%;max-width:700px;text-align:center;margin-bottom:20px}
+.title{font-family:'Russo One',sans-serif;font-size:2.5em;color:#00c8ff;letter-spacing:3px;
+  margin-bottom:8px;text-shadow:0 0 20px rgba(0,200,255,.6)}
+.back-btn{position:absolute;left:0;top:50%;transform:translateY(-50%);padding:8px 16px;
+  background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);color:#00c8ff;
+  font-family:'Russo One',sans-serif;font-size:.85em;cursor:pointer;border-radius:3px;
+  transition:all .2s;text-decoration:none}
+.back-btn:hover{background:rgba(0,200,255,.22);transform:translateY(-50%) translateY(-2px)}
+
+.game-container{position:relative;z-index:10;width:100%;max-width:700px;
+  background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.15);border-radius:2px;
+  padding:30px;backdrop-filter:blur(12px)}
+.game-container::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,200,255,.5),transparent)}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:1000;display:flex;
+  align-items:center;justify-content:center;padding:20px}
+.modal.hidden{display:none}
+.modal-content{background:rgba(3,0,15,.98);border:1px solid rgba(0,200,255,.3);border-radius:8px;
+  padding:40px 30px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,200,255,.2)}
+.modal-title{font-family:'Russo One',sans-serif;font-size:1.8em;color:#00c8ff;text-align:center;
+  margin-bottom:30px;letter-spacing:2px}
+.mode-options{display:flex;flex-direction:column;gap:15px}
+.mode-btn{padding:18px 24px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.25);
+  color:#00c8ff;font-family:'Rajdhani',sans-serif;font-size:1.1em;font-weight:600;cursor:pointer;
+  border-radius:6px;transition:all .3s;text-align:left;display:flex;align-items:center;gap:12px}
+.mode-btn:hover{background:rgba(0,200,255,.18);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,200,255,.3)}
+.mode-icon{font-size:1.5em}
+.mode-text{flex:1}
+.mode-desc{font-size:.8em;color:rgba(0,200,255,.6);font-weight:400;margin-top:4px}
+
+.invite-screen{display:none}
+.invite-screen.active{display:block}
+.btn{width:100%;padding:14px;background:linear-gradient(135deg,rgba(0,200,255,.15),rgba(0,255,157,.15));
+  border:1px solid rgba(0,200,255,.4);color:#00c8ff;font-family:'Russo One',sans-serif;font-size:1em;
+  letter-spacing:1px;cursor:pointer;border-radius:4px;transition:all .3s;margin-top:10px}
+.btn:hover{background:linear-gradient(135deg,rgba(0,200,255,.25),rgba(0,255,157,.25));
+  transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,200,255,.3)}
+.btn-secondary{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.7)}
+.btn-secondary:hover{background:rgba(255,255,255,.08)}
+.room-code-display{font-family:'Share Tech Mono',monospace;font-size:2em;color:#00ff9d;text-align:center;
+  letter-spacing:8px;padding:20px;background:rgba(0,255,157,.08);border:2px solid rgba(0,255,157,.3);
+  border-radius:6px;margin:20px 0}
+
+.game-container-inner{display:none}
+.game-container-inner.active{display:block}
+.game-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;
+  padding:15px;background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.15);border-radius:4px}
+.current-player{padding:8px 16px;background:rgba(0,255,157,.15);border:1px solid rgba(0,255,157,.3);
+  border-radius:20px;font-family:'Russo One',sans-serif;font-size:.9em;color:#00ff9d;letter-spacing:1px}
+.dice-container{text-align:center;margin:20px 0;padding:20px;background:rgba(0,200,255,.05);
+  border:1px solid rgba(0,200,255,.15);border-radius:6px}
+.dice{width:80px;height:80px;background:#fff;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:3em;margin:10px auto;cursor:pointer;transition:all .2s;
+  color:#000;font-weight:700}
+.dice:hover{transform:scale(1.1)}
+.dice:active{transform:scale(0.95)}
+.dice.disabled{opacity:.4;cursor:not-allowed}
+#snakeCanvas{display:block;margin:0 auto;border:2px solid rgba(0,200,255,.25);border-radius:3px;
+  background:#1a0a2e}
+
+.game-over{display:none;text-align:center;padding:40px 20px}
+.game-over.active{display:block}
+.game-over-title{font-family:'Russo One',sans-serif;font-size:2.5em;color:#00ff9d;margin-bottom:20px;
+  text-shadow:0 0 20px rgba(0,255,157,.6)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="na-bg"><div class="na-floor"></div><div class="na-beam"></div>
+<div class="na-glow1"></div><div class="na-glow2"></div></div>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← BACK</a>
+  <div class="title">🐍 SNAKE & LADDER</div>
+</div>
+
+<div class="modal" id="modeModal">
+  <div class="modal-content">
+    <div class="modal-title">SELECT GAME MODE</div>
+    <div class="mode-options">
+      <button class="mode-btn" onclick="selectMode('local')">
+        <span class="mode-icon">👥</span>
+        <div class="mode-text"><div>Local 2 Players</div>
+        <div class="mode-desc">Play on same device</div></div>
+      </button>
+      <button class="mode-btn" onclick="selectMode('room')">
+        <span class="mode-icon">🔗</span>
+        <div class="mode-text"><div>Create Room</div>
+        <div class="mode-desc">Play online with friend</div></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="game-container">
+  
+  <div class="invite-screen" id="roomScreen">
+    <div class="modal-title">CREATE ROOM</div>
+    <div class="room-code-display" id="roomCode">------</div>
+    <button class="btn" onclick="copyCode()">📋 COPY CODE</button>
+    <button class="btn" onclick="shareLink()">🔗 SHARE LINK</button>
+    <div style="text-align:center;padding:20px" id="waitingText">Waiting for opponent...</div>
+    <button class="btn btn-secondary" onclick="backToMenu()">CANCEL</button>
+  </div>
+
+  <div class="game-container-inner" id="gameArea">
+    <div class="game-info">
+      <div class="current-player" id="currentPlayer">PLAYER 1's Turn</div>
+    </div>
+    <canvas id="snakeCanvas" width="600" height="600"></canvas>
+    <div class="dice-container">
+      <div class="dice" id="dice" onclick="rollDice()">?</div>
+      <div id="rollText" style="margin-top:10px;font-size:.9em;color:rgba(0,200,255,.7)">Click to roll</div>
+    </div>
+    <button class="btn btn-secondary" onclick="quitGame()">QUIT</button>
+  </div>
+
+  <div class="game-over" id="gameOver">
+    <div class="game-over-title">GAME OVER</div>
+    <div id="winner" style="font-size:1.3em;color:rgba(0,200,255,.9);margin-bottom:30px"></div>
+    <button class="btn" onclick="playAgain()">PLAY AGAIN</button>
+    <button class="btn btn-secondary" onclick="window.location.href='index.html'">MENU</button>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const G = {mode:null,players:[{pos:0},{pos:0}],turn:0,dice:0,canRoll:true,over:false,roomId:null,
+  playerId:null,db:null,roomRef:null,
+  snakes:[[98,78],[95,75],[92,88],[89,68],[87,24],[62,19],[51,34],[48,26],[16,6]],
+  ladders:[[2,38],[7,14],[8,31],[15,26],[21,42],[28,84],[36,44],[51,67],[71,91]]
+};
+
+window.onload=()=>{
+  const p=new URLSearchParams(window.location.search).get('roomId');
+  if(p){G.roomId=p;document.getElementById('modeModal').classList.add('hidden');
+    document.getElementById('roomScreen').classList.add('active');
+    document.getElementById('roomCode').textContent=p;joinRoom();}
+  
+  const s=JSON.parse(localStorage.getItem('we_settings')||'{}');
+  if(s.firebaseApiKey&&s.firebaseDatabaseUrl){
+    if(!firebase.apps.length)firebase.initializeApp({apiKey:s.firebaseApiKey,
+      databaseURL:s.firebaseDatabaseUrl,projectId:s.firebaseProjectId||'we-dove'});
+    G.db=firebase.database();}
+  
+  const u=JSON.parse(sessionStorage.getItem('we_user')||'null');
+  G.playerId=u?u.username:'P'+Math.floor(Math.random()*10000);
+};
+
+function selectMode(m){G.mode=m;document.getElementById('modeModal').classList.add('hidden');
+  m==='local'?startLocal():createRoom();}
+function backToMenu(){if(G.roomRef)G.roomRef.remove();
+  document.querySelectorAll('.invite-screen,.game-container-inner').forEach(e=>e.classList.remove('active'));
+  document.getElementById('modeModal').classList.remove('hidden');}
+
+function startLocal(){document.getElementById('gameArea').classList.add('active');init();}
+
+function createRoom(){const c=Array(6).fill(0).map(()=>'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random()*36)]).join('');
+  G.roomId=c;G.roomRef=G.db.ref(`gameRooms/${c}`);
+  G.roomRef.set({code:c,gameType:'snake-ladder',host:G.playerId,guest:null,status:'waiting',
+    createdAt:firebase.database.ServerValue.TIMESTAMP});
+  document.getElementById('roomScreen').classList.add('active');
+  document.getElementById('roomCode').textContent=c;
+  G.roomRef.on('value',s=>{const r=s.val();if(r&&r.guest&&r.status==='waiting'){
+    G.roomRef.update({status:'playing'});startOnline();}
+    if(r&&r.status==='playing'&&r.guest)startOnline();});}
+
+function joinRoom(){G.roomRef=G.db.ref(`gameRooms/${G.roomId}`);
+  G.roomRef.once('value').then(s=>{const r=s.val();if(!r){alert('Room not found');return;}
+    if(r.guest){alert('Room full');return;}
+    G.roomRef.update({guest:G.playerId,status:'playing'});startOnline();});}
+
+function startOnline(){document.getElementById('roomScreen').classList.remove('active');
+  document.getElementById('gameArea').classList.add('active');init();
+  G.roomRef.child('gameState').on('value',s=>{const st=s.val();
+    if(st&&st.lastMove&&st.lastMoveBy!==G.playerId){G.players[st.turn].pos=st.pos;
+      G.turn=st.turn;G.dice=st.dice;draw();updateTurn();}});}
+
+function copyCode(){navigator.clipboard.writeText(document.getElementById('roomCode').textContent).then(()=>alert('Copied!'));}
+function shareLink(){const l=`${window.location.origin}${window.location.pathname}?roomId=${document.getElementById('roomCode').textContent}`;
+  navigator.clipboard.writeText(l).then(()=>alert('Link copied!'));}
+
+function init(){G.players=[{pos:0},{pos:0}];G.turn=0;G.dice=0;G.canRoll=true;G.over=false;draw();updateTurn();}
+
+function draw(){const c=document.getElementById('snakeCanvas'),ctx=c.getContext('2d'),w=600,cs=60;
+  ctx.fillStyle='#1a0a2e';ctx.fillRect(0,0,w,w);ctx.strokeStyle='rgba(0,200,255,.15)';
+  for(let i=0;i<=10;i++){ctx.beginPath();ctx.moveTo(i*cs,0);ctx.lineTo(i*cs,w);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,i*cs);ctx.lineTo(w,i*cs);ctx.stroke();}
+  ctx.fillStyle='rgba(0,200,255,.4)';ctx.font='14px monospace';ctx.textAlign='center';
+  for(let n=1;n<=100;n++){const p=getPos(n);ctx.fillText(n,p.x,p.y-15);}
+  ctx.strokeStyle='#ff4444';ctx.lineWidth=3;
+  G.snakes.forEach(([h,t])=>{const p1=getPos(h),p2=getPos(t);ctx.beginPath();ctx.moveTo(p1.x,p1.y);
+    ctx.quadraticCurveTo((p1.x+p2.x)/2,(p1.y+p2.y)/2-30,p2.x,p2.y);ctx.stroke();});
+  ctx.strokeStyle='#44ff44';
+  G.ladders.forEach(([b,t])=>{const p1=getPos(b),p2=getPos(t);ctx.beginPath();ctx.moveTo(p1.x,p1.y);
+    ctx.lineTo(p2.x,p2.y);ctx.stroke();});
+  const cols=['#ff4444','#4444ff'];
+  G.players.forEach((pl,i)=>{if(pl.pos>0){const p=getPos(pl.pos);ctx.fillStyle=cols[i];
+    ctx.beginPath();ctx.arc(p.x+(i-0.5)*15,p.y,12,0,Math.PI*2);ctx.fill();}});}
+
+function getPos(n){const cs=60,r=9-Math.floor((n-1)/10);let c=(n-1)%10;
+  if(r%2===0)c=9-c;return{x:c*cs+30,y:r*cs+30};}
+
+function rollDice(){if(!G.canRoll||G.over)return;G.canRoll=false;
+  document.getElementById('dice').classList.add('disabled');
+  let i=0;const iv=setInterval(()=>{document.getElementById('dice').textContent=Math.floor(Math.random()*6)+1;
+    if(++i>=10){clearInterval(iv);G.dice=Math.floor(Math.random()*6)+1;
+      document.getElementById('dice').textContent=G.dice;move();}},100);}
+
+function move(){let p=G.players[G.turn].pos+G.dice;if(p>100){document.getElementById('rollText').textContent='Too high!';
+    setTimeout(next,1500);return;}
+  G.players[G.turn].pos=p;const s=G.snakes.find(x=>x[0]===p);if(s)G.players[G.turn].pos=s[1];
+  const l=G.ladders.find(x=>x[0]===p);if(l)G.players[G.turn].pos=l[1];
+  draw();if(G.players[G.turn].pos===100){end();return;}
+  if(G.mode!=='local'&&G.roomRef)G.roomRef.child('gameState').set({turn:G.turn,pos:G.players[G.turn].pos,
+    dice:G.dice,lastMoveBy:G.playerId,timestamp:firebase.database.ServerValue.TIMESTAMP});
+  setTimeout(next,1500);}
+
+function next(){G.turn=1-G.turn;G.canRoll=true;document.getElementById('dice').classList.remove('disabled');
+  document.getElementById('dice').textContent='?';document.getElementById('rollText').textContent='Click to roll';
+  updateTurn();}
+
+function updateTurn(){document.getElementById('currentPlayer').textContent=`PLAYER ${G.turn+1}'s Turn`;}
+
+function end(){G.over=true;if(G.roomRef)G.roomRef.update({status:'finished',winner:G.turn+1});
+  document.getElementById('gameArea').classList.remove('active');
+  document.getElementById('gameOver').classList.add('active');
+  document.getElementById('winner').textContent=`PLAYER ${G.turn+1} WINS!`;
+  const u=JSON.parse(sessionStorage.getItem('we_user')||'null');
+  if(u&&G.db)G.db.ref(`users/${u.username}/totalGames`).transaction(c=>(c||0)+1);}
+
+function quitGame(){if(confirm('Quit?')){if(G.roomRef)G.roomRef.remove();window.location.href='index.html';}}
+function playAgain(){document.getElementById('gameOver').classList.remove('active');
+  if(G.roomRef)G.roomRef.remove();backToMenu();}
+</script>
+</body>
+</html>

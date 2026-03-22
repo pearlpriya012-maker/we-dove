@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ludo — WE🕊️</title>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Rajdhani',sans-serif;background:#03000f;color:#fff;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding:20px;overflow-x:hidden
+}
+
+/* Neon Arena Background */
+.na-bg{position:fixed;inset:0;pointer-events:none;z-index:0}
+.na-floor{position:absolute;bottom:0;left:-20%;right:-20%;height:55%;
+  background-image:linear-gradient(rgba(0,200,255,.09) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,200,255,.09) 1px,transparent 1px);
+  background-size:55px 55px;transform:perspective(500px) rotateX(65deg);
+  transform-origin:bottom;opacity:.55}
+.na-beam{position:absolute;top:0;left:50%;transform:translateX(-50%);width:3px;height:42%;
+  background:linear-gradient(180deg,rgba(0,200,255,.6),transparent);filter:blur(2px)}
+.na-glow1{position:absolute;width:500px;height:180px;border-radius:50%;
+  background:rgba(0,200,255,.06);filter:blur(80px);top:15%;left:-80px}
+.na-glow2{position:absolute;width:380px;height:160px;border-radius:50%;
+  background:rgba(160,0,255,.06);bottom:8%;right:-50px;filter:blur(80px)}
+
+.header{position:relative;z-index:10;width:100%;max-width:700px;text-align:center;margin-bottom:20px}
+.title{font-family:'Russo One',sans-serif;font-size:2.5em;color:#00c8ff;letter-spacing:3px;
+  margin-bottom:8px;text-shadow:0 0 20px rgba(0,200,255,.6)}
+.back-btn{position:absolute;left:0;top:50%;transform:translateY(-50%);padding:8px 16px;
+  background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);color:#00c8ff;
+  font-family:'Russo One',sans-serif;font-size:.85em;cursor:pointer;border-radius:3px;
+  transition:all .2s;text-decoration:none}
+.back-btn:hover{background:rgba(0,200,255,.22);transform:translateY(-50%) translateY(-2px)}
+
+.game-container{position:relative;z-index:10;width:100%;max-width:700px;
+  background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.15);border-radius:2px;
+  padding:30px;backdrop-filter:blur(12px)}
+.game-container::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,200,255,.5),transparent)}
+
+/* Modals (same as chess) */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:1000;
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.modal.hidden{display:none}
+.modal-content{background:rgba(3,0,15,.98);border:1px solid rgba(0,200,255,.3);
+  border-radius:8px;padding:40px 30px;max-width:500px;width:100%;
+  box-shadow:0 20px 60px rgba(0,200,255,.2)}
+.modal-title{font-family:'Russo One',sans-serif;font-size:1.8em;color:#00c8ff;
+  text-align:center;margin-bottom:30px;letter-spacing:2px}
+.mode-options{display:flex;flex-direction:column;gap:15px}
+.mode-btn{padding:18px 24px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.25);
+  color:#00c8ff;font-family:'Rajdhani',sans-serif;font-size:1.1em;font-weight:600;
+  cursor:pointer;border-radius:6px;transition:all .3s;text-align:left;display:flex;
+  align-items:center;gap:12px}
+.mode-btn:hover{background:rgba(0,200,255,.18);transform:translateY(-2px);
+  box-shadow:0 4px 16px rgba(0,200,255,.3)}
+.mode-icon{font-size:1.5em}
+.mode-text{flex:1}
+.mode-desc{font-size:.8em;color:rgba(0,200,255,.6);font-weight:400;margin-top:4px}
+
+.invite-screen{display:none}
+.invite-screen.active{display:block}
+.input-group{margin-bottom:20px}
+.input-label{font-family:'Share Tech Mono',monospace;font-size:.75em;color:rgba(0,200,255,.7);
+  letter-spacing:1px;margin-bottom:8px;display:block;text-transform:uppercase}
+.input-field{width:100%;padding:12px 16px;background:rgba(0,200,255,.05);
+  border:1px solid rgba(0,200,255,.25);color:#00c8ff;font-family:'Rajdhani',sans-serif;
+  font-size:1em;border-radius:4px;outline:none}
+.input-field:focus{border-color:rgba(0,200,255,.5);background:rgba(0,200,255,.08)}
+.btn{width:100%;padding:14px;background:linear-gradient(135deg,rgba(0,200,255,.15),rgba(0,255,157,.15));
+  border:1px solid rgba(0,200,255,.4);color:#00c8ff;font-family:'Russo One',sans-serif;
+  font-size:1em;letter-spacing:1px;cursor:pointer;border-radius:4px;transition:all .3s;
+  margin-top:10px}
+.btn:hover{background:linear-gradient(135deg,rgba(0,200,255,.25),rgba(0,255,157,.25));
+  transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,200,255,.3)}
+.btn-secondary{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.7)}
+.btn-secondary:hover{background:rgba(255,255,255,.08)}
+.room-code-display{font-family:'Share Tech Mono',monospace;font-size:2em;color:#00ff9d;
+  text-align:center;letter-spacing:8px;padding:20px;background:rgba(0,255,157,.08);
+  border:2px solid rgba(0,255,157,.3);border-radius:6px;margin:20px 0}
+.copy-hint{text-align:center;font-size:.85em;color:rgba(0,200,255,.6);margin-top:10px}
+
+.friends-list{max-height:300px;overflow-y:auto;margin-bottom:20px}
+.friend-item{padding:12px 16px;background:rgba(0,200,255,.05);
+  border:1px solid rgba(0,200,255,.15);border-radius:4px;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .2s}
+.friend-item:hover{background:rgba(0,200,255,.12)}
+.friend-name{font-size:1.05em;font-weight:600}
+.friend-status{font-size:.8em;color:rgba(0,255,157,.8)}
+.friend-status.offline{color:rgba(255,255,255,.3)}
+.invite-btn{padding:6px 14px;background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.3);
+  color:#00c8ff;font-size:.85em;border-radius:4px;cursor:pointer;transition:all .2s}
+.invite-btn:hover{background:rgba(0,200,255,.25)}
+
+.waiting-room{text-align:center;padding:40px 20px}
+.waiting-icon{font-size:4em;margin-bottom:20px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.waiting-text{font-size:1.2em;color:rgba(0,200,255,.8);margin-bottom:10px}
+.waiting-subtext{font-size:.9em;color:rgba(0,200,255,.5)}
+.player-list{margin:30px 0}
+.player-item{padding:12px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.2);
+  border-radius:4px;margin-bottom:8px}
+.player-name{font-weight:600;color:#00ff9d}
+.player-role{font-size:.85em;color:rgba(0,200,255,.6);margin-top:4px}
+
+/* Ludo Game */
+.ludo-container{display:none}
+.ludo-container.active{display:block}
+.game-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;
+  padding:15px;background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.15);
+  border-radius:4px;flex-wrap:wrap;gap:10px}
+.current-player{padding:8px 16px;background:rgba(0,255,157,.15);border:1px solid rgba(0,255,157,.3);
+  border-radius:20px;font-family:'Russo One',sans-serif;font-size:.9em;color:#00ff9d;
+  letter-spacing:1px}
+.dice-container{text-align:center;margin:20px 0;padding:20px;background:rgba(0,200,255,.05);
+  border:1px solid rgba(0,200,255,.15);border-radius:6px}
+.dice{width:80px;height:80px;background:#fff;border-radius:10px;display:flex;
+  align-items:center;justify-content:center;font-size:3em;margin:10px auto;
+  cursor:pointer;transition:all .2s;color:#000;font-weight:700}
+.dice:hover{transform:scale(1.1)}
+.dice:active{transform:scale(0.95)}
+.dice.disabled{opacity:.4;cursor:not-allowed}
+.roll-text{font-size:.9em;color:rgba(0,200,255,.7);margin-top:10px}
+#ludoCanvas{display:block;margin:0 auto;border:2px solid rgba(0,200,255,.25);
+  border-radius:3px;background:#1a0a2e}
+
+.game-over{display:none;text-align:center;padding:40px 20px}
+.game-over.active{display:block}
+.game-over-title{font-family:'Russo One',sans-serif;font-size:2.5em;color:#00ff9d;
+  margin-bottom:20px;text-shadow:0 0 20px rgba(0,255,157,.6)}
+.game-over-winner{font-size:1.3em;color:rgba(0,200,255,.9);margin-bottom:30px}
+.game-over-actions{display:flex;gap:15px;justify-content:center;flex-wrap:wrap}
+
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="na-bg">
+  <div class="na-floor"></div>
+  <div class="na-beam"></div>
+  <div class="na-glow1"></div>
+  <div class="na-glow2"></div>
+</div>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← BACK</a>
+  <div class="title">🎲 LUDO</div>
+</div>
+
+<!-- Mode Selection Modal -->
+<div class="modal" id="modeModal">
+  <div class="modal-content">
+    <div class="modal-title">SELECT GAME MODE</div>
+    <div class="mode-options">
+      <button class="mode-btn" onclick="selectMode('local')">
+        <span class="mode-icon">👥</span>
+        <div class="mode-text">
+          <div>Local Multiplayer</div>
+          <div class="mode-desc">2-4 players on same device</div>
+        </div>
+      </button>
+      <button class="mode-btn" onclick="selectMode('invite')">
+        <span class="mode-icon">👤</span>
+        <div class="mode-text">
+          <div>Invite Friend</div>
+          <div class="mode-desc">Send direct invitation to online friend</div>
+        </div>
+      </button>
+      <button class="mode-btn" onclick="selectMode('room')">
+        <span class="mode-icon">🔗</span>
+        <div class="mode-text">
+          <div>Create Room</div>
+          <div class="mode-desc">Get code or shareable link</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="game-container">
+  
+  <!-- Invite Friend Screen -->
+  <div class="invite-screen" id="inviteScreen">
+    <div class="modal-title">INVITE FRIEND</div>
+    <div class="input-group">
+      <label class="input-label">Search Friend</label>
+      <input type="text" class="input-field" id="friendSearch" placeholder="Enter username...">
+    </div>
+    <div class="friends-list" id="friendsList"></div>
+    <button class="btn btn-secondary" onclick="backToModeSelect()">BACK</button>
+  </div>
+
+  <!-- Create Room Screen -->
+  <div class="invite-screen" id="roomScreen">
+    <div class="modal-title">CREATE ROOM</div>
+    <div class="room-code-display" id="roomCode">------</div>
+    <div class="copy-hint">Share this code with your friends (2-4 players)</div>
+    <button class="btn" onclick="copyRoomCode()">📋 COPY CODE</button>
+    <button class="btn" onclick="shareRoomLink()">🔗 SHARE LINK</button>
+    <div class="waiting-room" style="margin-top:30px">
+      <div class="waiting-icon">⏳</div>
+      <div class="waiting-text">Waiting for players...</div>
+      <div class="player-list" id="roomPlayerList"></div>
+      <button class="btn" id="startGameBtn" onclick="startGame()" style="display:none">START GAME</button>
+    </div>
+    <button class="btn btn-secondary" onclick="cancelRoom()">CANCEL</button>
+  </div>
+
+  <!-- Join Room Screen -->
+  <div class="invite-screen" id="joinScreen">
+    <div class="modal-title">JOIN ROOM</div>
+    <div class="input-group">
+      <label class="input-label">Room Code</label>
+      <input type="text" class="input-field" id="joinCode" placeholder="Enter 6-character code...">
+    </div>
+    <button class="btn" onclick="joinRoom()">JOIN GAME</button>
+    <button class="btn btn-secondary" onclick="backToModeSelect()">BACK</button>
+  </div>
+
+  <!-- Player Count Selection (Local) -->
+  <div class="invite-screen" id="playerCountScreen">
+    <div class="modal-title">SELECT PLAYERS</div>
+    <div class="mode-options">
+      <button class="mode-btn" onclick="startLocalGame(2)">
+        <span class="mode-icon">2️⃣</span>
+        <div class="mode-text">2 Players</div>
+      </button>
+      <button class="mode-btn" onclick="startLocalGame(3)">
+        <span class="mode-icon">3️⃣</span>
+        <div class="mode-text">3 Players</div>
+      </button>
+      <button class="mode-btn" onclick="startLocalGame(4)">
+        <span class="mode-icon">4️⃣</span>
+        <div class="mode-text">4 Players</div>
+      </button>
+    </div>
+    <button class="btn btn-secondary" onclick="backToModeSelect()">BACK</button>
+  </div>
+
+  <!-- Ludo Game -->
+  <div class="ludo-container" id="ludoGame">
+    <div class="game-info">
+      <div class="current-player" id="currentPlayer">RED's Turn</div>
+    </div>
+    
+    <canvas id="ludoCanvas" width="600" height="600"></canvas>
+    
+    <div class="dice-container">
+      <div class="dice" id="dice" onclick="rollDice()">?</div>
+      <div class="roll-text" id="rollText">Click to roll</div>
+    </div>
+
+    <div style="margin-top:20px;text-align:center">
+      <button class="btn btn-secondary" onclick="quitGame()">QUIT GAME</button>
+    </div>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div class="game-over" id="gameOver">
+    <div class="game-over-title">GAME OVER</div>
+    <div class="game-over-winner" id="gameOverWinner"></div>
+    <div class="game-over-actions">
+      <button class="btn" onclick="playAgain()">PLAY AGAIN</button>
+      <button class="btn btn-secondary" onclick="window.location.href='index.html'">BACK TO MENU</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script>
+// Ludo multiplayer game - Complete implementation
+const GAME = {
+  mode: null, // 'local' or 'online'
+  playerCount: 0,
+  currentPlayerIndex: 0,
+  players: [],
+  board: [],
+  diceValue: 0,
+  canRoll: true,
+  canvas: null,
+  ctx: null,
+  gameOver: false,
+  
+  // Multiplayer
+  roomId: null,
+  playerId: null,
+  isHost: false,
+  db: null,
+  roomRef: null,
+  
+  firebaseConfig: null,
+  
+  // Snakes and Ladders positions
+  snakes: [[98,78],[95,75],[92,88],[89,68],[87,24],[62,19],[51,34],[48,26],[16,6]],
+  ladders: [[2,38],[7,14],[8,31],[15,26],[21,42],[28,84],[36,44],[51,67],[71,91]]
+};
+
+window.onload = function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const roomId = urlParams.get('roomId');
+  
+  if (roomId) {
+    document.getElementById('modeModal').classList.add('hidden');
+    document.getElementById('joinScreen').classList.add('active');
+    document.getElementById('joinCode').value = roomId;
+  }
+  
+  GAME.canvas = document.getElementById('ludoCanvas');
+  GAME.ctx = GAME.canvas.getContext('2d');
+  
+  loadFirebaseConfig();
+  loadUserData();
+};
+
+function loadFirebaseConfig() {
+  const settings = JSON.parse(localStorage.getItem('we_settings') || '{}');
+  if (settings.firebaseApiKey && settings.firebaseDatabaseUrl) {
+    GAME.firebaseConfig = {
+      apiKey: settings.firebaseApiKey,
+      databaseURL: settings.firebaseDatabaseUrl,
+      projectId: settings.firebaseProjectId || 'we-dove'
+    };
+    initializeFirebase();
+  }
+}
+
+function initializeFirebase() {
+  if (!GAME.firebaseConfig) return;
+  if (!firebase.apps.length) {
+    firebase.initializeApp(GAME.firebaseConfig);
+  }
+  GAME.db = firebase.database();
+}
+
+function loadUserData() {
+  const user = JSON.parse(sessionStorage.getItem('we_user') || 'null');
+  if (user) {
+    GAME.playerId = user.username;
+  } else {
+    GAME.playerId = 'Player' + Math.floor(Math.random() * 10000);
+  }
+}
+
+function selectMode(mode) {
+  GAME.mode = mode;
+  document.getElementById('modeModal').classList.add('hidden');
+  
+  if (mode === 'local') {
+    document.getElementById('playerCountScreen').classList.add('active');
+  } else if (mode === 'invite') {
+    showInviteScreen();
+  } else if (mode === 'room') {
+    createRoom();
+  }
+}
+
+function backToModeSelect() {
+  document.querySelectorAll('.invite-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('modeModal').classList.remove('hidden');
+  GAME.mode = null;
+}
+
+function startLocalGame(count) {
+  GAME.playerCount = count;
+  GAME.mode = 'local';
+  const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW'];
+  GAME.players = colors.slice(0, count).map((color, i) => ({
+    color: color,
+    position: 0,
+    name: color
+  }));
+  
+  document.getElementById('playerCountScreen').classList.remove('active');
+  document.getElementById('ludoGame').classList.add('active');
+  initGame();
+}
+
+// Invite/Room functions (similar to chess)
+function showInviteScreen() {
+  document.getElementById('inviteScreen').classList.add('active');
+  loadFriendsList();
+}
+
+function loadFriendsList() {
+  if (!GAME.db) {
+    document.getElementById('friendsList').innerHTML = '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">Firebase not configured</div>';
+    return;
+  }
+  
+  const friendsRef = GAME.db.ref(`friends/${GAME.playerId}`);
+  friendsRef.on('value', snap => {
+    const friends = snap.val() || {};
+    const friendsListEl = document.getElementById('friendsList');
+    
+    const friendItems = Object.keys(friends).map(friendId => {
+      const friend = friends[friendId];
+      if (friend.status !== 'accepted') return '';
+      
+      return `
+        <div class="friend-item">
+          <div>
+            <div class="friend-name">${friendId}</div>
+            <div class="friend-status online">● Online</div>
+          </div>
+          <button class="invite-btn" onclick="sendGameInvite('${friendId}')">INVITE</button>
+        </div>
+      `;
+    }).filter(Boolean).join('');
+    
+    friendsListEl.innerHTML = friendItems || '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.4)">No friends online</div>';
+  });
+}
+
+function sendGameInvite(friendId) {
+  if (!GAME.db) return;
+  
+  const inviteId = Date.now().toString();
+  const inviteRef = GAME.db.ref(`gameInvites/${GAME.playerId}/${friendId}/${inviteId}`);
+  
+  inviteRef.set({
+    gameType: 'ludo',
+    from: GAME.playerId,
+    to: friendId,
+    timestamp: firebase.database.ServerValue.TIMESTAMP,
+    status: 'pending'
+  }).then(() => {
+    alert(`Invite sent to ${friendId}!`);
+    createRoomForInvite(friendId);
+  });
+}
+
+function createRoomForInvite(guestId) {
+  const code = generateRoomCode();
+  GAME.roomId = code;
+  GAME.isHost = true;
+  
+  const roomRef = GAME.db.ref(`gameRooms/${code}`);
+  GAME.roomRef = roomRef;
+  
+  roomRef.set({
+    code: code,
+    gameType: 'ludo',
+    host: GAME.playerId,
+    players: [GAME.playerId],
+    status: 'waiting',
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    gameState: null
+  });
+  
+  document.getElementById('inviteScreen').classList.remove('active');
+  document.getElementById('roomScreen').classList.add('active');
+  document.getElementById('roomCode').textContent = code;
+  
+  monitorRoom();
+}
+
+function createRoom() {
+  const code = generateRoomCode();
+  GAME.roomId = code;
+  GAME.isHost = true;
+  
+  const roomRef = GAME.db.ref(`gameRooms/${code}`);
+  GAME.roomRef = roomRef;
+  
+  roomRef.set({
+    code: code,
+    gameType: 'ludo',
+    host: GAME.playerId,
+    players: [GAME.playerId],
+    status: 'waiting',
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    gameState: null
+  });
+  
+  document.getElementById('roomScreen').classList.add('active');
+  document.getElementById('roomCode').textContent = code;
+  
+  monitorRoom();
+}
+
+function monitorRoom() {
+  GAME.roomRef.on('value', snap => {
+    const room = snap.val();
+    if (!room) return;
+    
+    updateRoomPlayerList();
+    
+    if (room.players.length >= 2) {
+      document.getElementById('startGameBtn').style.display = 'block';
+    }
+    
+    if (room.status === 'playing') {
+      startOnlineGame();
+    }
+  });
+}
+
+function updateRoomPlayerList() {
+  GAME.roomRef.once('value').then(snap => {
+    const room = snap.val();
+    if (!room) return;
+    
+    const html = room.players.map((player, i) => {
+      const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW'];
+      return `
+        <div class="player-item">
+          <div class="player-name">${player}</div>
+          <div class="player-role">${colors[i]}</div>
+        </div>
+      `;
+    }).join('');
+    
+    document.getElementById('roomPlayerList').innerHTML = html;
+  });
+}
+
+function joinRoom() {
+  const code = document.getElementById('joinCode').value.trim().toUpperCase();
+  if (!code || code.length !== 6) {
+    alert('Please enter a valid 6-character code');
+    return;
+  }
+  
+  GAME.roomId = code;
+  GAME.isHost = false;
+  
+  const roomRef = GAME.db.ref(`gameRooms/${code}`);
+  GAME.roomRef = roomRef;
+  
+  roomRef.once('value').then(snap => {
+    const room = snap.val();
+    if (!room) {
+      alert('Room not found');
+      return;
+    }
+    if (room.players.length >= 4) {
+      alert('Room is full');
+      return;
+    }
+    
+    const players = room.players || [];
+    players.push(GAME.playerId);
+    
+    roomRef.update({
+      players: players
+    });
+    
+    document.getElementById('joinScreen').classList.remove('active');
+    document.getElementById('roomScreen').classList.add('active');
+    document.getElementById('roomCode').textContent = code;
+    
+    monitorRoom();
+  });
+}
+
+function startGame() {
+  if (!GAME.isHost) return;
+  
+  GAME.roomRef.update({
+    status: 'playing'
+  });
+}
+
+function startOnlineGame() {
+  GAME.roomRef.once('value').then(snap => {
+    const room = snap.val();
+    const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW'];
+    
+    GAME.playerCount = room.players.length;
+    GAME.players = room.players.map((playerId, i) => ({
+      color: colors[i],
+      position: 0,
+      name: playerId
+    }));
+    
+    document.getElementById('roomScreen').classList.remove('active');
+    document.getElementById('ludoGame').classList.add('active');
+    initGame();
+    
+    // Listen for moves
+    GAME.roomRef.child('gameState').on('value', snap => {
+      const state = snap.val();
+      if (state && state.lastMove && state.lastMoveBy !== GAME.playerId) {
+        applyMove(state.lastMove);
+      }
+    });
+  });
+}
+
+function copyRoomCode() {
+  const code = document.getElementById('roomCode').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    alert('Code copied to clipboard!');
+  });
+}
+
+function shareRoomLink() {
+  const code = document.getElementById('roomCode').textContent;
+  const link = `${window.location.origin}${window.location.pathname}?roomId=${code}`;
+  navigator.clipboard.writeText(link).then(() => {
+    alert('Link copied to clipboard!');
+  });
+}
+
+function cancelRoom() {
+  if (GAME.roomRef) {
+    GAME.roomRef.remove();
+  }
+  backToModeSelect();
+}
+
+function generateRoomCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+// Game Logic
+function initGame() {
+  GAME.currentPlayerIndex = 0;
+  GAME.diceValue = 0;
+  GAME.canRoll = true;
+  GAME.gameOver = false;
+  
+  updateCurrentPlayer();
+  drawBoard();
+}
+
+function drawBoard() {
+  const ctx = GAME.ctx;
+  const w = GAME.canvas.width;
+  const h = GAME.canvas.height;
+  const cellSize = w / 10;
+  
+  // Clear
+  ctx.fillStyle = '#1a0a2e';
+  ctx.fillRect(0, 0, w, h);
+  
+  // Grid
+  ctx.strokeStyle = 'rgba(0,200,255,.15)';
+  for (let i = 0; i <= 10; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * cellSize, 0);
+    ctx.lineTo(i * cellSize, h);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(0, i * cellSize);
+    ctx.lineTo(w, i * cellSize);
+    ctx.stroke();
+  }
+  
+  // Numbers
+  ctx.fillStyle = 'rgba(0,200,255,.4)';
+  ctx.font = '14px Share Tech Mono';
+  ctx.textAlign = 'center';
+  for (let i = 1; i <= 100; i++) {
+    const {x, y} = getPosition(i);
+    ctx.fillText(i, x, y - 15);
+  }
+  
+  // Snakes
+  ctx.strokeStyle = '#ff4444';
+  ctx.lineWidth = 3;
+  GAME.snakes.forEach(([head, tail]) => {
+    const p1 = getPosition(head);
+    const p2 = getPosition(tail);
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.quadraticCurveTo((p1.x + p2.x) / 2, (p1.y + p2.y) / 2 - 30, p2.x, p2.y);
+    ctx.stroke();
+  });
+  
+  // Ladders
+  ctx.strokeStyle = '#44ff44';
+  GAME.ladders.forEach(([bottom, top]) => {
+    const p1 = getPosition(bottom);
+    const p2 = getPosition(top);
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+  });
+  
+  // Players
+  const colors = ['#ff4444', '#4444ff', '#44ff44', '#ffff44'];
+  GAME.players.forEach((player, i) => {
+    if (player.position > 0) {
+      const pos = getPosition(player.position);
+      const offset = (i - GAME.playerCount / 2) * 15;
+      ctx.fillStyle = colors[i];
+      ctx.beginPath();
+      ctx.arc(pos.x + offset, pos.y, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  });
+}
+
+function getPosition(num) {
+  const cellSize = GAME.canvas.width / 10;
+  const row = 9 - Math.floor((num - 1) / 10);
+  let col = (num - 1) % 10;
+  if (row % 2 === 0) col = 9 - col;
+  
+  return {
+    x: col * cellSize + cellSize / 2,
+    y: row * cellSize + cellSize / 2
+  };
+}
+
+function rollDice() {
+  if (!GAME.canRoll || GAME.gameOver) return;
+  
+  // Check if it's my turn in online mode
+  if (GAME.mode === 'online') {
+    const myIndex = GAME.players.findIndex(p => p.name === GAME.playerId);
+    if (myIndex !== GAME.currentPlayerIndex) return;
+  }
+  
+  GAME.canRoll = false;
+  document.getElementById('dice').classList.add('disabled');
+  
+  // Animate
+  let rolls = 0;
+  const interval = setInterval(() => {
+    const val = Math.floor(Math.random() * 6) + 1;
+    document.getElementById('dice').textContent = val;
+    rolls++;
+    if (rolls >= 10) {
+      clearInterval(interval);
+      GAME.diceValue = Math.floor(Math.random() * 6) + 1;
+      document.getElementById('dice').textContent = GAME.diceValue;
+      movePlayer();
+    }
+  }, 100);
+}
+
+function movePlayer() {
+  const player = GAME.players[GAME.currentPlayerIndex];
+  let newPos = player.position + GAME.diceValue;
+  
+  if (newPos > 100) {
+    document.getElementById('rollText').textContent = 'Too high! Next player.';
+    setTimeout(nextPlayer, 1500);
+    return;
+  }
+  
+  player.position = newPos;
+  
+  // Check snake/ladder
+  const snake = GAME.snakes.find(s => s[0] === newPos);
+  if (snake) {
+    player.position = snake[1];
+    document.getElementById('rollText').textContent = `Snake! Down to ${snake[1]}`;
+  }
+  
+  const ladder = GAME.ladders.find(l => l[0] === newPos);
+  if (ladder) {
+    player.position = ladder[1];
+    document.getElementById('rollText').textContent = `Ladder! Up to ${ladder[1]}`;
+  }
+  
+  drawBoard();
+  
+  // Check win
+  if (player.position === 100) {
+    endGame(player.color);
+    return;
+  }
+  
+  // Sync move
+  if (GAME.mode === 'online' && GAME.roomRef) {
+    GAME.roomRef.child('gameState').set({
+      lastMove: {
+        playerIndex: GAME.currentPlayerIndex,
+        diceValue: GAME.diceValue,
+        newPosition: player.position
+      },
+      lastMoveBy: GAME.playerId,
+      currentPlayerIndex: GAME.currentPlayerIndex,
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
+  }
+  
+  setTimeout(nextPlayer, 1500);
+}
+
+function applyMove(move) {
+  const player = GAME.players[move.playerIndex];
+  player.position = move.newPosition;
+  GAME.currentPlayerIndex = move.playerIndex;
+  document.getElementById('dice').textContent = move.diceValue;
+  drawBoard();
+  nextPlayer();
+}
+
+function nextPlayer() {
+  GAME.currentPlayerIndex = (GAME.currentPlayerIndex + 1) % GAME.playerCount;
+  GAME.canRoll = true;
+  document.getElementById('dice').classList.remove('disabled');
+  document.getElementById('dice').textContent = '?';
+  document.getElementById('rollText').textContent = 'Click to roll';
+  updateCurrentPlayer();
+}
+
+function updateCurrentPlayer() {
+  const player = GAME.players[GAME.currentPlayerIndex];
+  document.getElementById('currentPlayer').textContent = `${player.color}'s Turn`;
+}
+
+function endGame(winner) {
+  GAME.gameOver = true;
+  
+  if (GAME.mode === 'online' && GAME.roomRef) {
+    GAME.roomRef.update({
+      status: 'finished',
+      winner: winner
+    });
+  }
+  
+  document.getElementById('ludoGame').classList.remove('active');
+  document.getElementById('gameOver').classList.add('active');
+  document.getElementById('gameOverWinner').textContent = `${winner} WINS!`;
+  
+  updateStats();
+}
+
+function quitGame() {
+  if (confirm('Are you sure you want to quit?')) {
+    if (GAME.roomRef) {
+      GAME.roomRef.remove();
+    }
+    window.location.href = 'index.html';
+  }
+}
+
+function playAgain() {
+  document.getElementById('gameOver').classList.remove('active');
+  if (GAME.roomRef) {
+    GAME.roomRef.remove();
+  }
+  GAME.roomRef = null;
+  GAME.roomId = null;
+  backToModeSelect();
+}
+
+function updateStats() {
+  const user = JSON.parse(sessionStorage.getItem('we_user') || 'null');
+  if (!user || !GAME.db) return;
+  
+  GAME.db.ref(`users/${user.username}/totalGames`).transaction(count => (count || 0) + 1);
+}
+
+</script>
+</body>
+</html>
