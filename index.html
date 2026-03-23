@@ -2239,21 +2239,44 @@ function loadSettings() {
     if (APP.settings.fbDbUrl) document.getElementById('cfgFbDbUrl').value = APP.settings.fbDbUrl;
     if (APP.settings.fbProject) document.getElementById('cfgFbProject').value = APP.settings.fbProject;
     if (APP.settings.gasUrl) document.getElementById('cfgGAS').value = APP.settings.gasUrl;
+    if (APP.settings.googleClientId) document.getElementById('settingsGoogleClientId').value = APP.settings.googleClientId;
   }
 }
 
 function saveSettings() {
+  const ytKey = document.getElementById('cfgYT').value.trim();
+  const fbApiKey = document.getElementById('cfgFbApiKey').value.trim();
+  const fbAuthDomain = document.getElementById('cfgFbAuthDomain').value.trim();
+  const fbDbUrl = document.getElementById('cfgFbDbUrl').value.trim();
+  const fbProject = document.getElementById('cfgFbProject').value.trim();
+  const gasUrl = document.getElementById('cfgGAS').value.trim();
+  const googleClientId = document.getElementById('settingsGoogleClientId').value.trim();
+  
   APP.settings = {
-    ytKey: document.getElementById('cfgYT').value.trim(),
-    fbApiKey: document.getElementById('cfgFbApiKey').value.trim(),
-    fbAuthDomain: document.getElementById('cfgFbAuthDomain').value.trim(),
-    fbDbUrl: document.getElementById('cfgFbDbUrl').value.trim(),
-    fbProject: document.getElementById('cfgFbProject').value.trim(),
-    gasUrl: document.getElementById('cfgGAS').value.trim()
+    // Old field names (for index.html backwards compatibility)
+    ytKey: ytKey,
+    fbApiKey: fbApiKey,
+    fbAuthDomain: fbAuthDomain,
+    fbDbUrl: fbDbUrl,
+    fbProject: fbProject,
+    gasUrl: gasUrl,
+    
+    // New field names (for game files compatibility)
+    youtubeApiKey: ytKey,
+    firebaseApiKey: fbApiKey,
+    firebaseAuthDomain: fbAuthDomain,
+    firebaseDatabaseUrl: fbDbUrl,
+    firebaseProjectId: fbProject,
+    googleClientId: googleClientId,
+    
+    // Apps Script URL (both formats)
+    appsScriptUrl: gasUrl
   };
+  
   localStorage.setItem('we_settings', JSON.stringify(APP.settings));
   closeSettings();
   toast('Settings saved! Reload to apply Firebase config.', 'success');
+  
   if (APP.settings.fbApiKey && APP.settings.fbDbUrl) {
     initFirebase();
   }
